@@ -5,6 +5,10 @@ FROM python:3.12.2
 WORKDIR /app
 
 # Instala las dependencias del proyecto
+RUN apt-get update && \
+    apt-get install -y netcat-openbsd && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copia el archivo de requisitos primero, para aprovechar la caché de capas de Docker
 # RUN pip install --no-cache-dir -r requirements.txt
 COPY ./requirements.txt ./
