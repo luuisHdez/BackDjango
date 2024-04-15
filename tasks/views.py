@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import AllowAny
 
 from .serializer import TaskSerializer
 from .models import Task
@@ -19,6 +20,7 @@ class TaskView(viewsets.ModelViewSet):
 
 # RegisterUser handles user registration
 class RegisterUser(APIView):
+    permission_classes = [AllowAny]
     def post(self, request, *args, **kwargs):
         username = request.data.get('username', '')
         password = request.data.get('password', '')
