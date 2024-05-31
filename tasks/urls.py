@@ -15,4 +15,6 @@ urlpatterns = [
     path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('docs/', include_docs_urls(title='Tasks API')),
     path('api/v1/register/', RegisterUser.as_view(), name='register_user'),  # Make sure RegisterUser is imported
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
 ]

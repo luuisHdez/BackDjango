@@ -4,9 +4,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate, login, logout
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import csrf_exempt
 
 from .serializer import TaskSerializer
 from .models import Task
@@ -39,3 +42,33 @@ class RegisterUser(APIView):
         user.save()
 
         return Response({'detail': 'User created successfully'}, status=status.HTTP_201_CREATED)
+
+# View to handle user login
+@csrf_exempt
+def login_view(request):
+    if request.method == 'POST':
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            refresh = RefreshToken.for_user(user)
+            response = Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            })
+            response.set_cookie('csrftoken', get_token(request), httponly=True, samesite='Lax')
+            return response
+        else:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+# View to handle user logout
+@csrf_exempt
+def logout_view(request):
+    if request.method == 'POST':
+        logout(request)
+        response = Response({'detail': 'Logout successful'})
+        response.delete_cookie('csrftoken')
+        return response
+    return Response({'error': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
