@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'coreapi',
-    'tasks'
+    'tasks',
+    'authentication'
 ]
 
 MIDDLEWARE = [
@@ -49,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
+    'BackDjango.debug_middleware.DebugMiddleware',  # Añadir aquí
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -85,7 +87,7 @@ DATABASES = {
         'NAME': 'db_ingresos',
         'USER': 'postgres',
         'PASSWORD': '123456',
-        'HOST': 'postgres',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
@@ -131,17 +133,19 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+CORS_ALLOW_CREDENTIALS = True  # Permitir el envío de cookies y encabezados de autenticación
 CORS_ALLOWED_ORIGINS = [ "http://localhost:3000",]
+
 CORS_ORIGIN_ALLOW_ALL = True
+
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASES': (
-	'rest_framework_simplejwt.authentication.JWTauthentication',
-	),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
     'DEFAULT_PERMISSION_CLASSES': (
-	'rest_framework.permissions.IsAuthenticated',
-	),
-    "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
+        'rest_framework.permissions.IsAuthenticated',
+    )
 }
 
 # JWT settings
@@ -173,29 +177,38 @@ SIMPLE_JWT = {
 }
 
 # Seguridad de cookies
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_HTTPONLY = True
-CSRF_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'  # Puedes cambiar a 'Strict' si lo necesitas
-CSRF_COOKIE_SAMESITE = 'Lax'     # Puedes cambiar a 'Strict' si lo necesitas
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False # SESSION_COOKIE_SECURE y CSRF_COOKIE_SECURE: Deben estar en True para garantizar que las cookies solo se envíen a través de HTTPS.
+SESSION_COOKIE_HTTPONLY = False
+CSRF_COOKIE_HTTPONLY = False # SESSION_COOKIE_HTTPONLY y CSRF_COOKIE_HTTPONLY: Configurados en True para que las cookies no sean accesibles a través de JavaScript, lo que ayuda a prevenir ataques XSS.
+SESSION_COOKIE_SAMESITE = 'Lax'  
+CSRF_COOKIE_SAMESITE = 'Lax' # SESSION_COOKIE_SAMESITE y CSRF_COOKIE_SAMESITE: Configurados en 'Lax' o 'Strict' para mitigar ataques CSRF. 'Lax' suele ser una buena opción por usabilidad y seguridad.
+
+
+# Importar default_headers correctamente
+from corsheaders.defaults import default_headers
+# Opcionalmente, permitir todas las cabeceras de CORS
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'X-CSRFToken',
+    # Otros encabezados necesarios
+]
 
 # Configuración CSRF
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']  # Añade tu dominio aquí
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']  # URL de tu frontend
 
 # Seguridad de la aplicación
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
+SECURE_BROWSER_XSS_FILTER = True # Activa el filtro XSS del navegador.
+SECURE_CONTENT_TYPE_NOSNIFF = True # Previene ataques de tipo MIME.
+X_FRAME_OPTIONS = 'DENY' # Configurado en 'DENY' para evitar que tu sitio sea incluido en un iframe, previniendo ataques de clickjacking
 
 # Seguridad para HTTPS
-SECURE_SSL_REDIRECT = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG #Redirige todo el tráfico HTTP a HTTPS. Solo debería estar activo en producción (not DEBUG)
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
 # Configuración de la sesión
-SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
-SESSION_COOKIE_AGE = 1209600  # Dos semanas
-SESSION_SAVE_EVERY_REQUEST = True
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db' # Utiliza una base de datos en caché para las sesiones, lo que puede mejorar el rendimiento.
+SESSION_COOKIE_AGE = 1209600  # Duración de la sesión (dos semanas) 
+SESSION_SAVE_EVERY_REQUEST = True # Guarda la sesión en cada solicitud.
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True # Expira la sesión cuando se cierra el navegador.
