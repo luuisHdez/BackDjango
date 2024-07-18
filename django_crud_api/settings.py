@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'coreapi',
     'tasks',
-    'authentication'
+    'authentication',
+    'OpenWeather',
 ]
 
 MIDDLEWARE = [
@@ -55,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'authentication.middleware.AutoLogoutMiddleware',
 ]
 
 ROOT_URLCONF = 'django_crud_api.urls'
@@ -140,6 +142,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Agrega esta línea
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
@@ -209,6 +212,6 @@ SECURE_HSTS_PRELOAD = True
 
 # Configuración de la sesión
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db' # Utiliza una base de datos en caché para las sesiones, lo que puede mejorar el rendimiento.
-SESSION_COOKIE_AGE = 1209600  # Duración de la sesión (dos semanas) 
+SESSION_COOKIE_AGE = 1800  # 30 minutes
 SESSION_SAVE_EVERY_REQUEST = True # Guarda la sesión en cada solicitud.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True # Expira la sesión cuando se cierra el navegador.

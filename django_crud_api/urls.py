@@ -6,4 +6,5 @@ urlpatterns = [
     path('tasks/', include('tasks.urls')),
     path('api-auth/', include('rest_framework.urls')),  # Para la autenticación de DRF
     path('authentication/', include('authentication.urls')),  # Incluye las rutas de autenticación
+    path('OpenWeather/', include('OpenWeather.urls')),
 ]
